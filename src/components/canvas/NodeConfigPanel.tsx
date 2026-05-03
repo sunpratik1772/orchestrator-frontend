@@ -185,7 +185,8 @@ const FIELDS: Record<string, FieldDef[]> = {
   slack: [
     { key: "channel",    label: "Channel",      type: "text",     placeholder: "#notifications" },
     { key: "message",    label: "Message",      type: "textarea", placeholder: "Workflow result: {{rows}}" },
-    { key: "webhookUrl", label: "Webhook URL (env: SLACK_WEBHOOK_URL)", type: "text", placeholder: "https://hooks.slack.com/..." },
+    { key: "webhookUrl", label: "Webhook URL (fallback if no bot token)", type: "text", placeholder: "https://hooks.slack.com/..." },
+    { key: "info", label: "", type: "info", content: "Bot token preferred — set SLACK_API_TOKEN_NOW (or SLACK_BOT_TOKEN) on the server. Falls back to webhook URL, then to a stub if neither is set." },
   ],
   notion: [
     { key: "databaseId", label: "Database ID",       type: "text", placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },

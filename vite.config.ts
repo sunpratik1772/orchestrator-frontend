@@ -10,25 +10,11 @@ import { defineConfig } from "vite";
     base: basePath,
     plugins: [react(), tailwindcss()],
     resolve: {
-      alias: {
-        "@": path.resolve(import.meta.dirname, "src"),
-      },
+      alias: { "@": path.resolve(import.meta.dirname, "src") },
       dedupe: ["react", "react-dom"],
     },
-    build: {
-      outDir: "dist",
-      emptyOutDir: true,
-    },
-    server: {
-      port,
-      strictPort: false,
-      host: "0.0.0.0",
-      allowedHosts: true,
-    },
-    preview: {
-      port,
-      host: "0.0.0.0",
-      allowedHosts: true,
-    },
+    build: { outDir: "dist", emptyOutDir: true },
+    server: { port, strictPort: false, host: "0.0.0.0", allowedHosts: true },
+    preview: { port, host: "0.0.0.0", allowedHosts: true },
   });
   

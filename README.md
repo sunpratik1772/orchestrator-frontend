@@ -2,34 +2,25 @@
 
   > dbSherpa Studio — visual AI workflow builder UI. React 19 + Vite 7 + TanStack Query + React Flow.
 
-  This is the standalone frontend for the orchestrator stack. It pairs with [`orchestrator-backend`](https://github.com/sunpratik1772/orchestrator-backend) (Python FastAPI). Both deploy independently to Cloud Run.
-
-  ---
+  Standalone frontend for the orchestrator stack. Pairs with [`orchestrator-backend`](https://github.com/sunpratik1772/orchestrator-backend) (Python FastAPI). Both deploy independently to Cloud Run.
 
   ## Features
 
-  - **Visual canvas** — drag-and-drop DAG editor (React Flow), 33 node types, branching/conditions, animated edges, MiniMap.
-  - **AI Copilot** — describe a workflow in natural language; Gemini plans + self-heals it via streaming SSE. Multi-attempt retry with structured Zod traceback fed back to the model.
-  - **4 color themes** — Dark, Light, Claude (warm cream + peach), Ocean (matte turquoise). One CSS-variable flip restyles the whole app.
-  - **Export** — Download workflow as JSON or YAML, or copy JSON to clipboard. Re-deploy on any backend by POSTing to `/api/workflows`.
-  - **Polish** — ⌘K command palette, sonner toasts, hero composer on landing, canvas skeleton loader, hover-lift on cards.
+  - **Visual canvas** — drag-and-drop DAG editor (React Flow), 33 node types, branching/conditions.
+  - **AI Copilot** — describe a workflow in natural language; Gemini plans + self-heals it via streaming SSE.
+  - **4 color themes** — Dark, Light, Claude (warm cream), Ocean (matte turquoise).
+  - **Export** — JSON / YAML / clipboard.
+  - **Polish** — ⌘K command palette, sonner toasts, hero composer, canvas skeleton loader.
 
-  ---
-
-  ## Quickstart (local dev)
+  ## Quickstart
 
   ```bash
   npm install
-  # point at a running backend (defaults to /api on the same origin via nginx in prod)
   echo 'VITE_API_BASE_URL=http://localhost:8080' > .env.local
-  npm run dev
+  npm run dev      # http://localhost:5173
   ```
 
-  Open http://localhost:5173.
-
-  ---
-
-  ## Build & run with Docker
+  ## Docker
 
   ```bash
   docker build -t orchestrator-frontend .
@@ -38,70 +29,40 @@
     orchestrator-frontend
   ```
 
-  The container ships nginx with `/api/*` reverse-proxied to `API_BACKEND_URL`. Cloud Run substitutes `PORT` automatically.
-
-  ---
+  The container ships nginx with `/api/*` reverse-proxied to `API_BACKEND_URL` (SSE-friendly: buffering off, 600s read timeout). Cloud Run substitutes `PORT` automatically.
 
   ## Deploy to Cloud Run
 
   ```bash
-  # Build + push to Artifact Registry
   gcloud builds submit --tag gcr.io/PROJECT_ID/orchestrator-frontend
-
-  # Deploy
   gcloud run deploy orchestrator-frontend \
     --image gcr.io/PROJECT_ID/orchestrator-frontend \
-    --region us-central1 \
-    --allow-unauthenticated \
+    --region us-central1 --allow-unauthenticated \
     --set-env-vars="API_BACKEND_URL=https://orchestrator-backend-xxx.run.app"
   ```
 
-  > The frontend container does NOT need `GOOGLE_API_KEY` or any other secret — all AI calls go through the backend.
-
-  ---
+  The frontend container does NOT need any secrets — all AI / Slack / etc. calls go through the backend.
 
   ## Project structure
 
   ```
   src/
     api-client/          # generated React Query hooks (from backend's OpenAPI spec)
-      generated/
-        api.ts           # endpoint hooks (useListWorkflows, useExecuteWorkflow, ...)
-        api.schemas.ts   # Zod schemas for request/response types
-      custom-fetch.ts    # axios-like fetch wrapper (sets base URL + auth)
-    components/
-      canvas/            # React Flow canvas + custom nodes + execution panel
-      layout/Shell.tsx   # sidebar, theme switcher, navigation
-      ui/                # shadcn primitives (DropdownMenu, Dialog, etc.)
-    pages/
-      Home.tsx           # landing + Copilot composer
-      WorkflowEditor.tsx # main editor page
-      WorkflowList.tsx, Tables.tsx, Files.tsx, ...
-    lib/
-      theme.ts           # 4-theme zustand store + persistence
-      utils.ts           # cn (clsx + tailwind-merge)
+    components/canvas/   # React Flow canvas + custom nodes + execution panel
+    components/layout/   # sidebar, theme switcher, navigation
+    components/ui/       # shadcn primitives
+    pages/               # Home, WorkflowEditor, WorkflowList, ...
+    lib/theme.ts         # 4-theme zustand store
   ```
-
-  ---
 
   ## Environment variables
 
   | Var | Where | Purpose |
   |---|---|---|
-  | `PORT` | runtime | Port nginx listens on (default `8080`, set by Cloud Run) |
+  | `PORT` | runtime | Port nginx listens on (default 8080) |
   | `API_BACKEND_URL` | runtime | Backend base URL; nginx proxies `/api/*` here |
-  | `VITE_API_BASE_URL` | build-time | Used in dev/local to bypass nginx (e.g. `http://localhost:8080`) |
-  | `BASE_PATH` | build-time | Vite `base` for sub-path deploys (default `/`) |
-
-  ---
-
-  ## Architecture notes
-
-  - Generated API client (`src/api-client/generated/`) is regenerated by the backend's `scripts/gen_ts_specs.py` from `openapi.yaml`. The frontend repo ships pre-generated files so you don't need Python to build the UI.
-  - All theme tokens live in `src/index.css` as CSS variables under `[data-theme="..."]` selectors. Adding a 5th theme = adding one block.
-  - Self-healing Copilot UI: the streaming SSE handler shows thinking steps live, throttled at 280ms each (promise-chain queue) so bursts don't overwhelm the chat.
-
-  ---
+  | `VITE_API_BASE_URL` | build-time | Used in dev to bypass nginx |
+  | `BASE_PATH` | build-time | Vite `base` for sub-path deploys |
 
   ## License
 

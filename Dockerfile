@@ -8,13 +8,11 @@
   ENV VITE_API_BASE_URL=""
   RUN npm run build
 
-  # ---- runtime: nginx serving static + proxying /api to backend ----
+  # ---- runtime ----
   FROM nginx:1.27-alpine
   COPY --from=builder /app/dist /usr/share/nginx/html
   COPY nginx.conf.template /etc/nginx/templates/default.conf.template
-  ENV PORT=8080
-  ENV API_BACKEND_URL=http://localhost:8000
+  ENV PORT=8080 API_BACKEND_URL=http://localhost:8000
   EXPOSE 8080
-  # Cloud Run substitutes ${PORT}; nginx envsubst expands templates at startup.
   CMD ["nginx", "-g", "daemon off;"]
   
