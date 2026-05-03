@@ -188,6 +188,17 @@ const FIELDS: Record<string, FieldDef[]> = {
     { key: "webhookUrl", label: "Webhook URL (fallback if no bot token)", type: "text", placeholder: "https://hooks.slack.com/..." },
     { key: "info", label: "", type: "info", content: "Bot token preferred — set SLACK_API_TOKEN_NOW (or SLACK_BOT_TOKEN) on the server. Falls back to webhook URL, then to a stub if neither is set." },
   ],
+  telegram: [
+    { key: "chatId",    label: "Chat ID (or set TELEGRAM_CHAT_ID env)", type: "text", placeholder: "123456789 or -1001234567890" },
+    { key: "message",   label: "Message",   type: "textarea", placeholder: "Workflow result: {{rows}}" },
+    { key: "parseMode", label: "Parse mode", type: "select", options: [
+        { value: "Markdown", label: "Markdown" },
+        { value: "HTML",     label: "HTML" },
+        { value: "",         label: "Plain text" },
+    ] },
+    { key: "botToken",  label: "Bot Token (override TELEGRAM_BOT_TOKEN)", type: "text", placeholder: "Leave empty to use env var" },
+    { key: "info", label: "", type: "info", content: "Get a bot token from @BotFather. To find your chat_id, send any message to the bot then visit https://api.telegram.org/bot<TOKEN>/getUpdates and look for \"chat\":{\"id\":...}. Group chats start with -100." },
+  ],
   notion: [
     { key: "databaseId", label: "Database ID",       type: "text", placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
     { key: "action",     label: "Action",            type: "select", options: [{ value:"query",label:"Query database" },{ value:"create",label:"Create page" }] },
