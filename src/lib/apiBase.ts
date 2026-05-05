@@ -1,4 +1,4 @@
-import { setBaseUrl } from "@/api-client";
+import { setBaseUrl } from "@workspace/api-client-react";
 
 export type BackendId = "ts" | "python" | "custom";
 
@@ -7,6 +7,12 @@ export interface BackendOption {
   label: string;
   description: string;
   url: string;
+  /**
+   * Optional path prefix prepended to every `/api/...` request *after* the
+   * origin. Used by the Python backend, which is mounted under `/pyapi` on
+   * the shared Replit proxy (so requests become `/pyapi/api/...`).
+   */
+  pathPrefix?: string;
 }
 
 const STORAGE_KEY = "dbsherpa:backend";
@@ -25,8 +31,9 @@ export const BACKEND_OPTIONS: BackendOption[] = [
   {
     id: "python",
     label: "Python backend",
-    description: "FastAPI rewrite (local at :8000)",
-    url: "http://localhost:8000",
+    description: "FastAPI rewrite served at /pyapi (same origin)",
+    url: "",
+    pathPrefix: "/pyapi",
   },
   {
     id: "custom",
@@ -61,6 +68,16 @@ export function getActiveBackendUrl(): string {
   return raw.replace(/\/+$/, "");
 }
 
+export function getActivePathPrefix(): string {
+  const id = getStoredBackendId();
+  const opt = BACKEND_OPTIONS.find(b => b.id === id);
+  const raw = opt?.pathPrefix ?? "";
+  // Normalize: trim trailing slashes and ensure leading slash
+  if (!raw) return "";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
 export function setActiveBackend(id: BackendId, customUrl?: string) {
   try {
     localStorage.setItem(STORAGE_KEY, id);
@@ -76,19 +93,24 @@ export function setActiveBackend(id: BackendId, customUrl?: string) {
  * at app boot AND any time the user switches backend.
  */
 export function applyBackend(): void {
-  const url = getActiveBackendUrl();
-  // Generated client URLs already begin with `/api/...`. We only override the
-  // origin (e.g. "http://localhost:8000"). Empty string = same-origin.
-  setBaseUrl(url || null);
+  const origin = getActiveBackendUrl();
+  const prefix = getActivePathPrefix();
+  // Generated client URLs already begin with `/api/...`. We override the
+  // origin AND optional path prefix (e.g. Python at /pyapi → final URL
+  // becomes `${origin}/pyapi/api/...`). Empty string = same-origin.
+  const combined = `${origin}${prefix}`;
+  setBaseUrl(combined || null);
 }
 
 /**
  * Build a URL for hand-rolled fetches (e.g. the Copilot SSE stream that
  * doesn't go through the generated client). Pass the same `/api/...` path
- * the generated client would use; we'll prepend the active origin.
+ * the generated client would use; we'll prepend the active origin and any
+ * configured path prefix.
  */
 export function apiUrl(path: string): string {
-  const base = getActiveBackendUrl();
+  const origin = getActiveBackendUrl();
+  const prefix = getActivePathPrefix();
   const p = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${p}`;
+  return `${origin}${prefix}${p}`;
 }
